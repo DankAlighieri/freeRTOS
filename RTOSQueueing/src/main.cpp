@@ -12,6 +12,10 @@ static const UBaseType_t queueLength = 10;
 static QueueHandle_t queue1;
 static QueueHandle_t queue2;
 
+const int ledPin = LED_BUILTIN;
+
+static byte ledState = LOW;
+
 // Task A
 void taskA(void *p) {
   while (1)
@@ -19,6 +23,11 @@ void taskA(void *p) {
     char buffer[20];
     int index = 0;
     buffer[index] = '\0';
+    char *queue2Msg = "";
+
+    if(xQueueReceive(queue2, (void *) &queue2Msg, 5) == pdPASS) {
+      Serial.println(queue2Msg);
+    }
 
     while (1) {
       if(Serial.available()){
@@ -41,7 +50,7 @@ void taskA(void *p) {
       static int value = atoi(t);
 
       if(xQueueSend(queue1, (void *) &(value), 1) == pdPASS){
-        Serial.println("Delay value added to queue");
+        Serial.println("Delay value added to queue1");
       }
     }
     
@@ -49,17 +58,32 @@ void taskA(void *p) {
   }
   
 }
+
 // Task B
 void taskB(void *p) {
-  int del = 0;
+  int del = 0, c = 0;
   while (1) {
-    if (xQueueReceive(queue1, (void *) &del, 10) == pdPASS) {
-      Serial.print("Delay received from queue: ");
+    if (xQueueReceive(queue1, (void *) &del, 5) == pdPASS) {
+      Serial.print("Delay received from queue1: ");
       Serial.println(del);
     }
-    
+
+    if (del) {
+      c++;
+      ledState = !ledState;
+      digitalWrite(ledPin, ledState);
+      vTaskDelay(del/portTICK_PERIOD_MS);
+      ledState = !ledState;
+      digitalWrite(ledPin, ledState);
+      vTaskDelay(del/portTICK_PERIOD_MS);
+
+      if(c >= 100) {
+        if(xQueueSend(queue2, (void *) &("Blinked"), 5) == pdPASS) {
+          Serial.println("Blinked sent to queue2");
+        }
+      }
+    }
   }
-  
 }
 
 void setup() {
@@ -72,6 +96,8 @@ void setup() {
 
   xTaskCreatePinnedToCore(taskA, "task A", 4096, NULL, 1, NULL, app_core);
   xTaskCreatePinnedToCore(taskB, "task B", 4096, NULL, 1, NULL, app_core);
+
+  pinMode(ledPin, OUTPUT);
 
 }
 
