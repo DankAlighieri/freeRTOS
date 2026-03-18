@@ -2,7 +2,15 @@
   "version": 1,
   "author": "Guilherme Emetério Santos Lima",
   "editor": "wokwi",
-  "parts": [ { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} } ],
-  "connections": [ [ "esp:TX", "$serialMonitor:RX", "", [] ], [ "esp:RX", "$serialMonitor:TX", "", [] ] ],
+  "parts": [ 
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 102, "left": -53.8, "attrs": { "color": "red" } }
+ ],
+  "connections": [ 
+    [ "esp:TX", "$serialMonitor:RX", "", [] ], 
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp:12", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.1", "green", [ "v9.6", "h38.8" ] ]
+   ],
   "dependencies": {}
 }
