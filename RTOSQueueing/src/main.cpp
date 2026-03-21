@@ -41,11 +41,8 @@ void taskA(void *p) {
 
     char *t = strtok(buffer, " ");
 
-    if (!strcmp(t, "delay")) {
-      while (t) {
-        t = strtok(NULL, " ");
-        break;
-      }
+    if (!strcmp(t, "delay") && t != NULL) {
+      t = strtok(NULL, " ");
 
       static int value = atoi(t);
 
@@ -53,7 +50,6 @@ void taskA(void *p) {
         Serial.println("Delay value added to queue1");
       }
     }
-    
     vTaskDelay(500/portTICK_PERIOD_MS);
   }
   
