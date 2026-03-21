@@ -23,7 +23,7 @@ void taskA(void *p) {
     char buffer[20];
     int index = 0;
     buffer[index] = '\0';
-    char *queue2Msg = "";
+    const char queue2Msg[10] = "";
 
     if(xQueueReceive(queue2, (void *) &queue2Msg, 0) == pdPASS) {
       Serial.println(queue2Msg);
@@ -81,8 +81,9 @@ void taskB(void *p) {
       Serial.print("Led State: ");
       Serial.println(ledState);
 
+      const char response[10] = "Blinked";
       if(c >= 100) {
-        if(xQueueSend(queue2, (void *) &("Blinked"), 0) == pdPASS) {
+        if(xQueueSend(queue2, (void *) &response, 0) == pdPASS) {
           Serial.println("Blinked sent to queue2");
         }
       }
