@@ -24,22 +24,22 @@ void taskA(void *p) {
   char queue2Msg[10];
 
   while (1) {
-    char queue2Msg[10];
-    // Caso led pisque 100x, printar a mensagem da filaB
-    if(xQueueReceive(queue2, queue2Msg, 5) == pdPASS) {
-      queue2Msg[9] = '\0';
-      Serial.print("Recebido");
-      Serial.println(queue2Msg);
-    }
-
     while (1) {
+
       if(Serial.available()){
         char c = Serial.read();
         if (c == '\n' || c == '\r') break;
         buffer[index++] = c;
       }
       if(index >= 20 - 1) break;
-      vTaskDelay(10/portTICK_PERIOD_MS); // p desbloquear o core
+    
+      char queue2Msg[10];
+      // Caso led pisque 100x, printar a mensagem da filaB
+      if(xQueueReceive(queue2, queue2Msg, 5) == pdPASS) {
+        queue2Msg[9] = '\0';
+        Serial.println(queue2Msg);
+      }
+      vTaskDelay(pdMS_TO_TICKS(10)); // p desbloquear o core
     }
     buffer[index] = '\0';
     index = 0;
@@ -55,7 +55,7 @@ void taskA(void *p) {
         Serial.println("Delay value added to queue1");
       }
     }
-    vTaskDelay(10/portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
   
 }
@@ -70,19 +70,17 @@ void taskB(void *p) {
     }
 
     if (del) {
-      Serial.println(c++);
+      c++;
       ledState = !ledState;
       digitalWrite(ledPin, ledState);
-      vTaskDelay(((int) del)/portTICK_PERIOD_MS);
+      vTaskDelay(pdMS_TO_TICKS(del)); 
       ledState = !ledState;
       digitalWrite(ledPin, ledState);
-      vTaskDelay(((int) del)/portTICK_PERIOD_MS);
+      vTaskDelay(pdMS_TO_TICKS(del));
 
       const char response[10] = "Blinked!";
       if(c >= 100) {
         if(xQueueSend(queue2, response, 5) == pdPASS) {
-          Serial.print(response);
-          Serial.println(" sent to queue");
           c = 0;
         }
       }
@@ -93,7 +91,7 @@ void taskB(void *p) {
 void setup() {
   Serial.begin(115200);
 
-  vTaskDelay(1000/portTICK_PERIOD_MS);
+  vTaskDelay(pdMS_TO_TICKS(10));
 
   queue1 = xQueueCreate(queueLength, sizeof(int));
   queue2 = xQueueCreate(queueLength, sizeof(char) * 10);
