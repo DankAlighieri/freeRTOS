@@ -12,6 +12,7 @@ static const UBaseType_t queueLength = 10;
 static QueueHandle_t queue1;
 static QueueHandle_t queue2;
 
+const int stackSize = 4096;
 const int ledPin = 12;
 
 static byte ledState = LOW;
@@ -31,7 +32,7 @@ void taskA(void *p) {
         if (c == '\n' || c == '\r') break;
         buffer[index++] = c;
       }
-      if(index >= 20 - 1) break;
+      if(index >= 19) break;
     
       char queue2Msg[10];
       // Caso led pisque 100x, printar a mensagem da filaB
@@ -57,7 +58,6 @@ void taskA(void *p) {
     }
     vTaskDelay(pdMS_TO_TICKS(10));
   }
-  
 }
 
 // Ler delay da fila A, aplicar o delay para o blink do led, enviar msg caso o led pisque 100x
@@ -96,8 +96,8 @@ void setup() {
   queue1 = xQueueCreate(queueLength, sizeof(int));
   queue2 = xQueueCreate(queueLength, sizeof(char) * 10);
 
-  xTaskCreatePinnedToCore(taskA, "task A", 4096, NULL, 1, NULL, app_core);
-  xTaskCreatePinnedToCore(taskB, "task B", 4096, NULL, 1, NULL, app_core);
+  xTaskCreatePinnedToCore(taskA, "task A", stackSize, NULL, 1, NULL, app_core);
+  xTaskCreatePinnedToCore(taskB, "task B", stackSize, NULL, 1, NULL, app_core);
 
   pinMode(ledPin, OUTPUT);
 }
