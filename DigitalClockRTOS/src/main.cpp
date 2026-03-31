@@ -49,12 +49,21 @@ void setup() {
     for(;;);
   }
 
-  if(display.begin(SSD1306_SWITCHCAPVCC, 0x3C)){
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)){
     Serial.println("Failed to initialize display");
     for(;;);
   }
 
   apiQueue = xQueueCreate(queueLength, sizeof(datetime));
+
+  xTaskCreatePinnedToCore(
+                taskA, 
+                "Task to consume the API",
+                8192,
+                NULL,
+                1,
+                NULL,
+                app_core);
 }
 
 void loop() {
@@ -65,19 +74,27 @@ void taskA(void *p) {
   WiFi.begin("Wokwi-GUEST");
   Serial.println("Connecting to wifi");
   vTaskDelay(pdMS_TO_TICKS(300));
-  if(!WiFi.isConnected()) {
+  while(!WiFi.isConnected()) {
     Serial.println("Unable to connect to WiFi, try again!");
-    exit(1);
+    vTaskDelay(pdMS_TO_TICKS(200));
   }
 
   while (1) {
-    int err = client.begin("https://worldtimeapi.org/api/timezone/America/Recife");
+    bool err = client.begin("https://worldtimeapi.org/api/timezone/America/Recife");
+    if (!err) {
+      Serial.println("Connecting to client...");
+      continue;
+    }
 
-    if (!err) break;
-    
+    int protocolResp = client.GET();
 
+    String resp = client.getString();
+
+    Serial.println(resp);
+
+    client.end();
+    vTaskDelay(pdMS_TO_TICKS(300));
   }
-  
 }
 
 void taskB(void *p){
